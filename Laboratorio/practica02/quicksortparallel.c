@@ -1,4 +1,3 @@
-#define SIZE 10000000
 #include "quicksort.c"
 #include <omp.h>
 #include <time.h>
@@ -30,51 +29,49 @@ void imprimeArreglo(int* arreglo, int size)
   return;
 }
 
-int * merge(int * arreglo, int medio)
+int * merge(int * arreglo, int medio, int size)
 {
-  int * ordenado = malloc(SIZE * sizeof(int));
+  int * ordenado = malloc(size * sizeof(int));
   int i = 0;
   int j = medio+1;
   int contador = 0;
-  while(i <= medio && j < SIZE)
+  while(i <= medio && j < size)
     if(arreglo[i] <= arreglo[j])
       ordenado[contador++] = arreglo[i++];
     else
       ordenado[contador++] = arreglo[j++];
   while(i < medio)
     ordenado[contador++] = arreglo[i++];
-  while(j < SIZE)
+  while(j < size)
     ordenado[contador++] = arreglo[j++];
   return ordenado;
 }
 
-int * quickParallel(int * arreglo)
+int * quickParallel(int * arreglo,int size)
 {
-  int medio = SIZE/2;
+  int medio = 1+(size-1)/2;
 #pragma omp parallel sections 
   {
     #pragma omp section
     quicksort(arreglo,0,medio); 
     #pragma omp section
-    quicksort(arreglo,medio+1,SIZE);
+    quicksort(arreglo,medio+1,size);
   }
-  return merge(arreglo, medio);
+  imprimeArreglo(arreglo,size);
+  printf("---------------");
+  return merge(arreglo, medio, size);
   
 }
 
 int main(){
-  int* arreglo = malloc(SIZE * sizeof(int));
-  llenaArreglo(arreglo, SIZE);  
-  clock_t t = clock();
-  arreglo = quickParallel(arreglo);
-  t = clock() - t;
-
-  double time = ((double)t)/CLOCKS_PER_SEC;
-  printf("%f seconds sorting with parallelism\n",time);
-  if(isSorted(arreglo,SIZE) == 1)
-    printf("Success\n");
-  else
-    printf("FAIL\n");
+  int size;
+  scanf("%d",&size);
+  int * arreglo = malloc(size * sizeof(int));
+  for(int i = 0; i < size; i++)
+    scanf("%d",&arreglo[i]);
+  arreglo = quickParallel(arreglo,size);
+  imprimeArreglo(arreglo,size);
   free(arreglo);
+
   return 0;
 }
